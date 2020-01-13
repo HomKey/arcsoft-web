@@ -1,0 +1,54 @@
+name: arcsoft-web-demo
+server:
+  port: 8088
+  servlet:
+    context-path: /
+  ssl:
+    #证书的路径.
+    keyStore: classpath:myarc.keystore
+    #证书密码，请修改为您自己证书的密码.
+    keyStorePassword: homkey
+    #秘钥库类型
+    keyStoreType: JKS
+    #证书别名
+    keyAlias: myarc
+#spring
+spring:
+  thymeleaf:
+    cache: false
+    mode: LEGACYHTML5
+  devtools:
+    restart:
+      enabled: false
+  jpa:
+    show-sql: true
+    database: mysql
+    hibernate:
+      ddl-auto: update
+  datasource:
+    druid:
+      url: jdbc:mysql://127.0.0.1:3306/arcsoft_web_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+      username: root
+      password: root
+      filters: stat,wall,log4j2
+      connectionInitSqls: "set names utf8mb4;"
+      maxActive: 20
+      initialSize: 1
+      maxWait: 60000
+      minIdle: 1
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: select 'x'
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      maxOpenPreparedStatements: 20
+      connection-properties: druid.stat.merggSql=ture;druid.stat.slowSqlMillis=5000
+arcsoft:
+  sdk:
+#    libPath: d:/arcsoft_lib/2.2.0.1
+    libPath: d:/arcsoft_lib/3.0.0.0
+    appId: 4pv18FSaAfvxRwivW5Uu21a22rEtivNNjguNGaVEaWpa
+    key: BAfop1kpWFaTNKcymx8AJ8Rz3K6f18aeEXZjp3KS5Y2H
+    threadPoolSize: 5

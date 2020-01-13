@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <!--<link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css">-->
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .el-table-add-row {
+            margin-top: 10px;
+            width: 100%;
+            height: 34px;
+            border: 1px dashed #c1c1cd;
+            border-radius: 3px;
+            cursor: pointer;
+            justify-content: center;
+            display: flex;
+            line-height: 34px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--<el-button @click="visible = true">Button</el-button>-->
+    <!--<el-dialog :visible.sync="visible" title="Hello world">-->
+    <!--<p>Try Element</p>-->
+    <!--</el-dialog>-->
+    <template>
+        <el-table class="tb-edit"
+                  :data="userList"
+                  style="width: 100%;"
+                  height="200">
+            <el-table-column label="名称" width="180">
+                <template scope="scope">
+                    <span v-if="scope.row.isSet">
+                        <el-input size="small" v-model="scope.row.name" placeholder="请输入名称"></el-input>
+                    </span>
+                    <span v-else>{{scope.row.name}}</span>
+                </template>
+            </el-table-column>
+            <el-table-column label="账号" width="180">
+                <template scope="scope">
+                    <span v-if="scope.row.isSet">
+                        <el-input size="small" v-model="scope.row.account" placeholder="请输入账号"></el-input>
+                    </span>
+                    <span v-else>{{scope.row.account}}</span>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    prop="updateTime"
+                    label="更新日期"
+                    :formatter="dateFormat">
+            </el-table-column>
+            <el-table-column label="操作">
+                <template scope="scope">
+                    <span v-if="scope.row.isSet">
+                        <el-button size="small" type="primary" @click="handleSave(scope.$index,scope.row)">
+                            保存
+                        </el-button>
+                        <el-button size="small" type="info" @click="handleCancel(scope.$index, scope.row)">
+                            取消
+                        </el-button>
+                    </span>
+                    <span v-else>
+                        <el-button size="small" type="primary" @click="openCamera(scope.$index,scope.row)">
+                            人脸识别
+                        </el-button>
+                        <el-button size="small" type="success" @click="handleEdit(scope.$index,scope.row)">
+                            修改
+                        </el-button>
+                        <el-button size="small" type="danger"
+                                   @click="handleDelete(scope.$index, scope.row)">
+                            删除
+                        </el-button>
+                    </span>
+                </template>
+            </el-table-column>
+        </el-table>
+        <div id="camera">
+            <video id="video" width="500px" height="500px" autoplay="autoplay" style="margin-top: 20px"></video>
+            <canvas id="canvas" width="500px" height="500px" style="display: none"></canvas>
+            <div>
+                <button id="inputFace" v-on:click="inputFace()">人脸录入</button>
+                <button id="confirmFace" v-on:click="confirmFace()">人脸核对</button>
+            </div>
+        </div>
+    </template>
+</div>
+</body>
+<!-- unpkg -->
+<!-- import Vue before Element -->
+<!-- import JavaScript -->
+<!--<script src="https://unpkg.com/vue@2.6.11/dist/vue.js"></script>-->
+<!--<script src="https://unpkg.com/element-ui@2.13.0/lib/index.js"></script>-->
+<!--<script src="https://unpkg.com/axios@0.19.0/dist/axios.min.js"></script>-->
+<!--<script src="https://unpkg.com/moment@2.24.0/moment.js"></script>-->
+<!-- localhost -->
+<script src="js/vue.js"></script>
+<script src="js/index.js"></script>
+<script src="js/axios.min.js"></script>
+<script src="js/moment.js"></script>
+<script>
+    let app = new Vue({
+        el: '#app',
+        data() {
+            return {
+                currentRow: null,
+                userList: []
+            }
+        },
+        mounted(){
+            axios.get('/user', {
+                params: {
+                    page: 0,
+                    pageSize: 10
+                }
+            })
+                .then(response => {
+                    if (response.status === 200 && response.data.code === 200) {
+                        response.data.data.content.map(i => {
+                            i.isSet = false;
+                        });
+                        this.userList = response.data.data.content;
+                    }
+                })
+                .catch(function (error) { // 请求失败处理
+                    console.log(error);
+                });
+        },
+        methods: {
+            dateFormat: function (row, column) {
+                let date = row[column.property];
+                if (date == undefined) {
+                    return ''
+                }
+                return moment(date).format("YYYY-MM-DD HH:mm:ss")
+            },
+            handleSave(index, row){
+                console.log("save");
+                row.isSet = false;
+                this.currentRow = row;
+            },
+            handleEdit(index, row) {
+                //点击修改 判断是否已经保存所有操作
+                for (let i of app.userList) {
+                    if (i.isSet && i.id != row.id) {
+                        app.$message.warning("请先保存当前编辑项");
+                        return false;
+                    }
+                }
+                row.isSet = true;
+                this.currentRow = row;
+            },
+            handleDelete(index, row) {
+                console.log("delete");
+                console.log(index, row);
+                this.currentRow = null;
+            },
+            handleCancel(index, row) {
+                row.isSet = false;
+                this.currentRow = row;
+            },
+            openCamera(index, row){
+                openCamera();
+                this.currentRow = row;
+            },
+            inputFace(){
+                let formData = new FormData();
+                //获得Canvas对象
+                formData.append("imageFile", getImageFile());
+                formData.append("userId", this.currentRow.id);
+                axios.post('/user/face', formData, {
+                    'Content-Type': 'multipart/form-data'
+                })
+                    .then(response => {
+                        if (response.status === 200 && response.data.code === 200) {
+                            console.log(response);
+                            var data = response.data.data;
+                            alert("年龄：" + data.age + "\n" + "性别：" + (data.gender === 0 ? "男" : (data.gender === 1 ? "女" : "未知")));
+                        } else {
+                            alert(response.data.data);
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error);
+                    });
+            },
+            confirmFace(){
+                let formData = new FormData();
+                //获得Canvas对象
+                formData.append("imageFile", getImageFile());
+                formData.append("userId", this.currentRow.id);
+                //获得Canvas对象
+                axios.post('/user/face/check', formData, {
+                    'Content-Type': 'multipart/form-data'
+                })
+                    .then(response => {
+                        if (response.status === 200 && response.data.code === 200) {
+                            alert("通过");
+                        } else {
+                            alert("不通过");
+                        }
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error);
+                    });
+            }
+        }
+    });
+
+    var getImageFile = function () {
+        let video = document.getElementById("video");
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, 500, 500);
+        return canvas.toDataURL();
+    };
+    var openCamera = function () {
+        let constraints = {
+            video: {width: 500, height: 500},
+            audio: false
+        };
+        let video = document.getElementById("video");
+        let promise = navigator.mediaDevices.getUserMedia(constraints);
+        promise.then(function (MediaStream) {
+            video.srcObject = MediaStream;
+            video.play();
+        });
+    }
+</script>
+</html>
