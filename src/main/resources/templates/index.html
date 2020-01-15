@@ -17,6 +17,10 @@
             display: flex;
             line-height: 34px;
         }
+
+        video, canvas {
+            position: absolute;
+        }
     </style>
 </head>
 <body>
@@ -62,8 +66,14 @@
                         </el-button>
                     </span>
                     <span v-else>
-                        <el-button size="small" type="primary" @click="openCamera(scope.$index,scope.row)">
-                            人脸识别
+                        <!--<el-button size="small" type="primary" @click="openAppCamera(scope.$index,scope.row)">-->
+                        <!--人脸识别-->
+                        <!--</el-button>-->
+                        <el-button size="small" type="primary" @click="inputFace(scope.$index,scope.row)">
+                            人脸录入
+                        </el-button>
+                        <el-button size="small" type="primary" @click="confirmFace(scope.$index,scope.row)">
+                            人脸核对
                         </el-button>
                         <el-button size="small" type="success" @click="handleEdit(scope.$index,scope.row)">
                             修改
@@ -77,11 +87,21 @@
             </el-table-column>
         </el-table>
         <div id="camera">
-            <video id="video" width="500px" height="500px" autoplay="autoplay" style="margin-top: 20px"></video>
-            <canvas id="canvas" width="500px" height="500px" style="display: none"></canvas>
+            <!--<video id="video" width="500px" height="500px" autoplay="autoplay" style="margin-top: 20px"></video>-->
+            <!--<canvas id="canvas" width="500px" height="500px" style="display: none"></canvas>-->
+            <video id="video" width="500" height="500" preload autoplay loop muted></video>
+            <canvas id="canvas" width="500" height="500" style="display: none"></canvas>
             <div>
                 <button id="inputFace" v-on:click="inputFace()">人脸录入</button>
                 <button id="confirmFace" v-on:click="confirmFace()">人脸核对</button>
+            </div>
+            <div>
+                <span>x：{{rect.x}}</span>
+                <span>y：{{rect.y}}</span>
+            </div>
+            <div>
+                <span>width：{{rect.width}}</span>
+                <span>height：{{rect.height}}</span>
             </div>
         </div>
     </template>
@@ -99,13 +119,19 @@
 <script src="js/index.js"></script>
 <script src="js/axios.min.js"></script>
 <script src="js/moment.js"></script>
+<script src="js/tracking-min.js"></script>
+<script src="js/face-min.js"></script>
 <script>
     let app = new Vue({
         el: '#app',
         data() {
             return {
                 currentRow: null,
-                userList: []
+                userList: [],
+                rect: {
+                    x: 0,
+                    y: 0
+                }
             }
         },
         mounted(){
@@ -160,72 +186,91 @@
                 row.isSet = false;
                 this.currentRow = row;
             },
-            openCamera(index, row){
-                openCamera();
+            openAppCamera(index, row){
+                openCamera(function () {
+                });
                 this.currentRow = row;
             },
-            inputFace(){
-                let formData = new FormData();
-                //获得Canvas对象
-                formData.append("imageFile", getImageFile());
-                formData.append("userId", this.currentRow.id);
-                axios.post('/user/face', formData, {
-                    'Content-Type': 'multipart/form-data'
-                })
-                    .then(response => {
-                        if (response.status === 200 && response.data.code === 200) {
-                            console.log(response);
-                            var data = response.data.data;
-                            alert("年龄：" + data.age + "\n" + "性别：" + (data.gender === 0 ? "男" : (data.gender === 1 ? "女" : "未知")));
-                        } else {
-                            alert(response.data.data);
-                        }
+            inputFace(index, row){
+                openCamera(function () {
+                    let formData = new FormData();
+                    //获得Canvas对象
+                    formData.append("imageFile", getImageFile());
+                    formData.append("userId", row.id);
+                    axios.post('/user/face', formData, {
+                        'Content-Type': 'multipart/form-data'
                     })
-                    .catch(function (error) { // 请求失败处理
-                        console.log(error);
-                    });
+                        .then(response => {
+                            if (response.status === 200 && response.data.code === 200) {
+                                console.log(response);
+                                var data = response.data.data;
+                                alert("年龄：" + data.age + "\n" + "性别：" + (data.gender === 0 ? "男" : (data.gender === 1 ? "女" : "未知")));
+                            } else {
+                                alert(response.data.data);
+                            }
+                        })
+                        .catch(function (error) { // 请求失败处理
+                            console.log(error);
+                        });
+                });
             },
-            confirmFace(){
-                let formData = new FormData();
-                //获得Canvas对象
-                formData.append("imageFile", getImageFile());
-                formData.append("userId", this.currentRow.id);
-                //获得Canvas对象
-                axios.post('/user/face/check', formData, {
-                    'Content-Type': 'multipart/form-data'
-                })
-                    .then(response => {
-                        if (response.status === 200 && response.data.code === 200) {
-                            alert("通过");
-                        } else {
-                            alert("不通过");
-                        }
+            confirmFace(index, row){
+                openCamera(function () {
+                    let formData = new FormData();
+                    //获得Canvas对象
+                    formData.append("imageFile", getImageFile());
+                    formData.append("userId", row.id);
+                    //获得Canvas对象
+                    let flag = false;
+                    axios.post('/user/face/check', formData, {
+                        'Content-Type': 'multipart/form-data'
                     })
-                    .catch(function (error) { // 请求失败处理
-                        console.log(error);
-                    });
+                        .then(response => {
+                            if (response.status === 200 && response.data.code === 200) {
+                                alert("通过");
+                            } else {
+                                alert("不通过");
+                            }
+                        })
+                        .catch(function (error) { // 请求失败处理
+                            console.log(error);
+                        });
+                });
             }
         }
     });
-
-    var getImageFile = function () {
-        let video = document.getElementById("video");
-        let canvas = document.getElementById("canvas");
+    let video = document.getElementById("video");
+    let canvas = document.getElementById("canvas");
+    let getImageFile = function () {
         let ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, 500, 500);
         return canvas.toDataURL();
     };
-    var openCamera = function () {
-        let constraints = {
-            video: {width: 500, height: 500},
-            audio: false
-        };
-        let video = document.getElementById("video");
-        let promise = navigator.mediaDevices.getUserMedia(constraints);
-        promise.then(function (MediaStream) {
-            video.srcObject = MediaStream;
-            video.play();
-        });
+
+    let tracker = new tracking.ObjectTracker('face');
+    tracker.setInitialScale(4);
+    tracker.setStepSize(2);
+    tracker.setEdgesDensity(0.1);
+    let trackTask = null;
+    let openCamera = function (callback) {
+        let context = canvas.getContext('2d');
+        trackTask = tracking.track('#video', tracker, {camera: true});
+        tracker.addListener('track', function(event){
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            event.data.forEach(function (rect) {
+                context.strokeStyle = '#a64ceb';
+                context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+                context.font = '11px Helvetica';
+                context.fillStyle = "#fff";
+                context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+                context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
+                app.rect = rect;
+                if (rect.width >= 200 && rect.height >= 200) {
+                    tracker.removeAllListeners('track');
+                    callback();
+                }
+            });
+        })
     }
 </script>
 </html>
