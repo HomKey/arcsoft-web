@@ -4,6 +4,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,6 +20,10 @@ public class ArcsoftWebApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ArcsoftWebApplication.class, args);
 	}
+
+
+	@Value("${server.port}")
+	public int serverPort;
 
 	@Bean
 	public TomcatServletWebServerFactory tomcatServletWebServerFactory(Connector connector){
@@ -43,7 +48,7 @@ public class ArcsoftWebApplication {
 		connector.setScheme("http");
 		connector.setPort(8080);
 		connector.setSecure(false);
-		connector.setRedirectPort(8088);
+		connector.setRedirectPort(serverPort);
 		return connector;
 	}
 }

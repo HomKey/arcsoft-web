@@ -33,10 +33,10 @@ public class FaceEngineFactory extends BasePooledObjectFactory<FaceEngine> {
         FaceEngine faceEngine = new FaceEngine(sdkLibPath);
         int activeCode = faceEngine.activeOnline(appId, sdkKey);
         // 引擎激活
-        log.debug("引擎激活:" + ArcSoftErrorCodeEnum.getDescriptionByCode(activeCode).getDescription());
+        log.info("引擎激活:" + ArcSoftErrorCodeEnum.getDescriptionByCode(activeCode).getDescription());
         int initCode = faceEngine.init(engineConfiguration);
         // 获取激活文件信息
-        log.debug("获取激活文件信息:" + ArcSoftErrorCodeEnum.getDescriptionByCode(initCode).getDescription());
+        log.info("获取激活文件信息:" + ArcSoftErrorCodeEnum.getDescriptionByCode(initCode).getDescription());
         faceEngine.setLivenessParam(0.5f, 0.7f);
         return faceEngine;
     }

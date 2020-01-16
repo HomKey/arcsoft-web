@@ -68,8 +68,8 @@ public class ArcSoftFaceServiceImpl implements FaceService {
         engineConfiguration.setDetectFaceMaxNum(10);
         engineConfiguration.setDetectFaceScaleVal(16);
         engineConfiguration.setDetectMode(DetectMode.ASF_DETECT_MODE_IMAGE);
-        engineConfiguration.setDetectFaceOrientPriority(DetectOrient.ASF_OP_ALL_OUT);
-//        engineConfiguration.setDetectFaceOrientPriority(DetectOrient.ASF_OP_0_ONLY);
+//        engineConfiguration.setDetectFaceOrientPriority(DetectOrient.ASF_OP_ALL_OUT);
+        engineConfiguration.setDetectFaceOrientPriority(DetectOrient.ASF_OP_0_ONLY);
 
         //功能配置
         functionConfiguration = FunctionConfiguration.builder()
@@ -189,10 +189,12 @@ public class ArcSoftFaceServiceImpl implements FaceService {
             List<FaceInfo> faceInfoList = new ArrayList<>();
             //人脸检测
             int i = faceEngine.detectFaces(imageInfo.getImageData(), imageInfo.getWidth(), imageInfo.getHeight(), imageInfo.getImageFormat(), faceInfoList);
+            log.info("人脸检测:" + i);
             if (!CollectionUtils.isEmpty(faceInfoList)) {
                 FaceFeature faceFeature = new FaceFeature();
                 //提取人脸特征
                 int resultCode = faceEngine.extractFaceFeature(imageInfo.getImageData(), imageInfo.getWidth(), imageInfo.getHeight(), imageInfo.getImageFormat(), faceInfoList.get(0), faceFeature);
+                log.info("人脸特征:" + resultCode);
                 return faceFeature.getFeatureData();
             }
         } catch (Exception e) {

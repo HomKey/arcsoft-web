@@ -1,0 +1,10 @@
+arcsoft:
+  sdk:
+    libPath: d:/arcsoft_lib/2.2.0.1
+#    libPath: d:/arcsoft_lib/3.0.0.0
+    appId: 4pv18FSaAfvxRwivW5Uu21a22rEtivNNjguNGaVEaWpa
+    key: BAfop1kpWFaTNKcymx8AJ8Rz3K6f18aeEXZjp3KS5Y2H
+    threadPoolSize: 5
+logging:
+  level:
+    root: info

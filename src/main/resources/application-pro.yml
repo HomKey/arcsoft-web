@@ -1,0 +1,16 @@
+arcsoft:
+  sdk:
+    libPath: /home/homkey/arc/libs/2.2.0.1
+#    libPath: /home/homkey/arc/libs/3.0.0.0
+    appId: 4pv18FSaAfvxRwivW5Uu21a22rEtivNNjguNGaVEaWpa
+    key: BAfop1kpWFaTNKcymx8AJ8RyuCXV3tvnvcjyDdgDZoRm
+    threadPoolSize: 5
+logging:
+  level:
+    root: info
+spring:
+  datasource:
+    druid:
+      url: jdbc:mysql://127.0.0.1:3306/arcsoft_web_demo?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
+      username: root
+      password: root
